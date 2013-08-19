@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# VBoxLaunchVMOnDisplay -- Launch a VirtualBox VM Video Display in a new X Window Server 
+#                          Instance (X Window Display)
+#
+# Copyright (C) 2013 Felipe Alcacibar <falcacibar@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify it under the terms 
+# of the GNU General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY 
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+# PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+
+if [ "$#" -lt "1" ]; then
+	echo "Usage: $(basename $0) vmname [VirtualBox args]..." 
+	exit 1
+fi
+
+DISPLAY=0
+sudo echo -ne
+until [ $DISPLAY_NUM > 10 ]; do
+	Xvfb :$DISPLAY > /dev/null 2>&1 &
+	pid=$!
+	sleep 0.5
+	lsof -a -U -p $pid  > /dev/null 2>&1
+
+	notfound="$?"
+	kill $pid > /dev/null 2>&1
+
+	wait $pid
+	 
+	[ "$notfound" == "0" ] && break
+
+	let DISPLAY=DISPLAY+1
+done
+
+DISPLAY=":${DISPLAY}"
+echo "Found empty display $DISPLAY"
+
+sudo X $DISPLAY > /dev/null 2>&1 &
+pid=$!
+
+VirtualBox --startvm $@ --fullscreen &
+vboxpid=$!
+sudo sh -c "while [ -d /proc/$vboxpid ];do sleep 0.5;done; kill $pid  > /dev/null 2>&1" &
