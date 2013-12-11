@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my($args, $doc, $added, $deleted); 
+
+$args		=
+$added 		=
+$deleted 	= '';
+
+$args 		= '"'.join('" "', @ARGV).'"' if(scalar(@ARGV));
+$doc 		= qx(git diff -U0 --word-diff-regex=. $args);
+
+while($doc =~ m/\[-(.*?)-\]/mxg) { 
+	$deleted .= $1;
+}
+
+while($doc =~ m/\{\+(.*?)\+\}/mxg) { 
+	$added .= $1;
+}
+
+$added 		= length($added);
+$deleted 	= length($deleted);
+
+print "Added 	       " . $added . "\n";
+print "Deleted        " . $deleted . "\n";
+print "Difference     " . abs($deleted - $added) . (($deleted - $added) < 0 ? ' added' : ' deleted')."\n" if($deleted != $added);
