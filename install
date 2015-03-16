@@ -1,0 +1,20 @@
+#!/bin/sh
+install_dir="/usr/local/bin"
+
+[ "$1" = "-u" ] \
+    && action="Uninstalling" \
+    || action="Installing"
+
+echo "${action} scripts:\n"
+
+find ./bin -maxdepth 1 -type f | (
+    while read script; do
+        if [ "$1" = "-u" ]; then
+            rm -rfv "${install_dir}/$(basename "${script}")"
+        else
+            install -m 755 -t "${install_dir}" -v "${script}"
+        fi
+    done
+)
+
+echo 
