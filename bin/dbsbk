@@ -1,0 +1,150 @@
+#!/bin/sh
+
+readlink_f() { file="$1";while true; do 
+local link="$( readlink $file )"; [ "${link}" = "" ] && break
+file="${link}"; done; echo "${file}"; }
+
+me="$(basename $(readlink_f $0))"
+
+HOSTNAME="$(hostname -s)"
+comp_cmd="pxz"
+comp_args="-z9"
+comp_ext="xz"
+comp_args_opt="no"
+mysql_user="root"
+
+set_opts() {
+  while [ "$#" != "0" ]; do
+    case $1 in
+      "-mu" | "--mysql-user")
+          shift
+          mysql_user="${1}"
+      ;;
+      "-mp" | "--mysql-password")
+          shift
+          mysql_password="${1}"
+      ;;
+      "-c" | "--compressor")
+          shift
+          comp_cmd="${1}"
+          [ "${comp_args_opt}" == "no" ] && comp_args=""
+      ;;
+      "-ca" | "--compressor-args")
+        shift
+          comp_args="${1}"
+          comp_args_opt="yes"
+      ;;
+      "-ce" | "--compressor-ext")
+          shift
+          comp_ext="${1}"
+      ;;
+      *)
+          backup="${backup} ${1}"
+      ;;
+    esac
+    [ "$#" != "0" ] && shift
+  done
+}
+
+usage() {
+   cat <<EOF
+usage: ${me} [options] [db]...
+
+Database backup tool supporting different types of databases with 
+compression.
+
+Databases:
+    mongodb                    MongoDB (tarballed mongodump)
+    mysql                      MySQL (mysqldump)
+    postgres                   PostgreSQL (pg_dumpall)
+
+Options:
+   -c cmd, --comp-cmd cmd      Use cmd as compressor command
+                               (default: ${comp_cmd})
+   -ca args, --comp-cmd-args   Arguments for compressor
+                               (default: ${comp_args})
+   -ce ext, --comp-ext         Compressor extension
+                               (default: ${comp_ext}
+   
+   MySQL specific
+
+   -mu user    , --mysql-user user   
+                               MySQL username
+                               (default: $mysql_user)
+   -mp password, --mysql-password password
+                               MySQL password, if you don't specify this
+                               argument, you will be prompted for the
+                               password
+
+EOF
+    exit 130
+}
+
+enforce_opts() {
+ echo ""
+}
+
+date="$(date +"%Y-%m-%d_%H:%M")"
+user_compress() {
+   "$comp_cmd" $comp_ext > "${HOSTNAME}-${backup_name}-${date}.${comp_ext}"
+}
+
+verbose_header() {
+   echo -n "${me} - Database Backup utility - Felipe A Buccioni <falcacibar@gmail.com>"
+}
+
+verbose_compress() {
+   cat <<EOF
+Compressor command    : ${comp_cmd}
+Compressor arguments  : ${comp_args}
+Compressor extension  : .${comp_ext}
+
+EOF
+}
+
+verbose_exec() {
+   echo "Executing Command     : $cmd | \"$comp_cmd\" $comp_ext > \"${HOSTNAME}-${backup_name}-${date}.${comp_ext}\""
+}
+
+verbose_header
+set_opts "$@"
+enforce_opts
+
+if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; then 
+    verbose_compress
+    for type in $backup; do
+        success="no"
+        case "$type" in
+            "postgres")
+                db_type="PostgreSQL"
+                backup_name="postgres"
+                cmd="sudo -u postgres pg_dumpall"
+                verbose_exec
+                sleep 1 # sudo -u postgres pg_dumpall | user_compress
+                success="yes"
+            ;;
+            "mysql")
+                db_type="MySQL"
+                backup_name="mysql"
+                cmd="mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password"
+                verbose_exec
+                sleep 1 # mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password | user_compress
+                success="yes"
+            ;; 
+            "mongodb")
+                db_type="MongoDB"
+                backup_name="mongo"
+                cmd="mongodump && ( tar -cvf - dump )"
+                verbose_exec
+                sleep 1 # mongodump && ( tar -cvf - dump | user_compress )
+                success="yes"
+            ;;
+            *)
+                 echo "Unknown backup type '$type', skipping"
+        esac
+        
+        [ "${success}" = "yes" ] && echo "Backup of $db_type database completed!\n"
+    done
+else
+    usage
+fi
