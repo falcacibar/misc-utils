@@ -70,7 +70,7 @@ Options:
                                (default: ${comp_args})
    -ce ext, --comp-ext         Compressor extension
                                (default: ${comp_ext}
-   -d dir, --directory dir     Directory to save the backup
+   -d dir, --directory dir      Directory to save the backup
                                (default: ${dir})
    
    MySQL specific
@@ -149,6 +149,9 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 cmd="mongodump && ( tar -cvf - dump )"
                 verbose_exec
                 mongodump && ( tar -cvf - dump | user_compress )
+                echo -n "Cleaning mongodb dump"
+                rm -rf dump
+                echo "done"
                 success="yes"
             ;;
             *)
