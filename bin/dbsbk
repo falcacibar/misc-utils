@@ -11,6 +11,7 @@ comp_cmd="pxz"
 comp_args="-z9"
 comp_ext="xz"
 comp_args_opt="no"
+dir="/tmp/backup"
 mysql_user="root"
 
 set_opts() {
@@ -37,6 +38,10 @@ set_opts() {
       "-ce" | "--compressor-ext")
           shift
           comp_ext="${1}"
+      ;;
+      "-d")
+          shift
+          dir="${1}"
       ;;
       *)
           backup="${backup} ${1}"
@@ -65,6 +70,8 @@ Options:
                                (default: ${comp_args})
    -ce ext, --comp-ext         Compressor extension
                                (default: ${comp_ext}
+   -d dir, --directory dir     Directory to save the backup
+                               (default: ${dir})
    
    MySQL specific
 
@@ -81,12 +88,15 @@ EOF
 }
 
 enforce_opts() {
- echo ""
+   if [ ! -d "${dir}" ]; then
+      mkdir -pv "${dir}"; 
+      [ "$?" -ne "0" ] && exit 1
+   fi
 }
 
 date="$(date +"%Y-%m-%d_%H:%M")"
 user_compress() {
-   "$comp_cmd" $comp_ext > "${HOSTNAME}-${backup_name}-${date}.${comp_ext}"
+   "$comp_cmd" $comp_ext > "${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}"
 }
 
 verbose_header() {
@@ -103,7 +113,7 @@ EOF
 }
 
 verbose_exec() {
-   echo "Executing Command     : $cmd | \"$comp_cmd\" $comp_ext > \"${HOSTNAME}-${backup_name}-${date}.${comp_ext}\""
+   echo "Executing Command     : $cmd | \"$comp_cmd\" $comp_ext > \"${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}\""
 }
 
 verbose_header
@@ -112,6 +122,8 @@ enforce_opts
 
 if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; then 
     verbose_compress
+    cd "${dir}"
+
     for type in $backup; do
         success="no"
         case "$type" in
@@ -120,7 +132,7 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 backup_name="postgres"
                 cmd="sudo -u postgres pg_dumpall"
                 verbose_exec
-                sleep 1 # sudo -u postgres pg_dumpall | user_compress
+                sudo -u postgres pg_dumpall | user_compress
                 success="yes"
             ;;
             "mysql")
@@ -128,7 +140,7 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 backup_name="mysql"
                 cmd="mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password"
                 verbose_exec
-                sleep 1 # mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password | user_compress
+                mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password | user_compress
                 success="yes"
             ;; 
             "mongodb")
@@ -136,7 +148,7 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 backup_name="mongo"
                 cmd="mongodump && ( tar -cvf - dump )"
                 verbose_exec
-                sleep 1 # mongodump && ( tar -cvf - dump | user_compress )
+                mongodump && ( tar -cvf - dump | user_compress )
                 success="yes"
             ;;
             *)
