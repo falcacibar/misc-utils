@@ -9,9 +9,9 @@ me="$(basename $(readlink_f $0))"
 if [ "$#" -lt 1 ];  then
     cat <<EOU
 Usage: $me [list]
-Starts a very simple shell to send commands secuentially or parallell 
-commands to a list of remote hosts via ssh and output prefixing the 
-name of the host.
+Starts a very simple shell to send sequentially or parallel 
+commands to remote hosts from a list via ssh and output prefixing 
+the name of the host.
 
   list       The list must be a string with hosts separated by
              spaces or a file name of a plain text file containing

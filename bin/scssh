@@ -9,8 +9,8 @@ me="$(basename $(readlink_f $0))"
 if [ "$#" -lt 2 ]; then
     cat <<EOU
 Usage: $me [list] [command(s)]
-Send commands secuentially or parallell commands to a list of remote 
-hosts via ssh and output prefixing the name of the host.
+Send sequentially or parallel commands to remote hosts from a list 
+via ssh and output prefixing the name of the host.
 
   list       The list must be a string with hosts separated by
              spaces or a file name of a plain text file containing
@@ -18,7 +18,7 @@ hosts via ssh and output prefixing the name of the host.
 
   command    This is a string containing the command or commands to
              send to bash shell via ssh, if you put an & at the end
-             of the command will be executed simultaneously
+             of the command will be executed in parallel
 
 Bugs, comments or suggestions:
 https://github.com/falcacibar/misc-utils
@@ -46,7 +46,7 @@ else
         else
             ssh -tt root@$host bash -c "'( $cmd ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'"
         fi
-        
+
         [ "${break}" = "yes" ] && break
     done
 
