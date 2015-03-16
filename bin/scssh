@@ -1,0 +1,54 @@
+#!/bin/sh 
+
+readlink_f() { file="$1";while true; do 
+local link="$( readlink $file )"; [ "${link}" = "" ] && break
+file="${link}"; done; echo "${file}"; }
+
+me="$(basename $(readlink_f $0))"
+
+if [ "$#" -lt 2 ]; then
+    cat <<EOU
+Usage: $me [list] [command(s)]
+Send commands secuentially or parallell commands to a list of remote 
+hosts via ssh and output prefixing the name of the host.
+
+  list       The list must be a string with hosts separated by
+             spaces or a file name of a plain text file containing
+             a list of host
+
+  command    This is a string containing the command or commands to
+             send to bash shell via ssh, if you put an & at the end
+             of the command will be executed simultaneously
+
+Bugs, comments or suggestions:
+https://github.com/falcacibar/misc-utils
+Felipe A. Buccioni <falacibar@gmail.com>
+
+EOU
+    exit 130
+else
+    cmd="$(echo ${2} | sed -Ee 's/^[\t ]*//g' -e 's/[\t ]*$//g')"
+    [ -z "$cmd" ] && exit
+
+    trap '[ "$pids" ] && kill -TERM $pids > /dev/null 2>&'1 INT TERM
+
+    list="${1}"
+    if [ -f "$list" ]; then
+       list="$(cat $list)"
+    fi
+    
+    bg="$(echo $cmd | sed -Ee 's/[ \t]+$//g' | tail -c 2)";
+
+    for host in $list; do 
+        if [ "$bg" = "&" ]; then
+            ssh -tt root@$host bash -c "' ( $(echo "$cmd" | sed -Ee 's/\&$//g') ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'" &
+            pids="${pids} $!"
+        else
+            ssh -tt root@$host bash -c "'( $cmd ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'"
+        fi
+    done
+
+    for pid in $pids; do
+        wait $pid
+    done
+fi

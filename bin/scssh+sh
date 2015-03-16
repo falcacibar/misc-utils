@@ -1,0 +1,44 @@
+#!/bin/sh
+
+readlink_f() { file="$1";while true; do 
+local link="$( readlink $file )"; [ "${link}" = "" ] && break
+file="${link}"; done; echo "${file}"; }
+
+me="$(basename $(readlink_f $0))"
+
+if [ "$#" -lt 1 ];  then
+    cat <<EOU
+Usage: $me [list]
+Starts a very simple shell to send commands secuentially or parallell 
+commands to a list of remote hosts via ssh and output prefixing the 
+name of the host.
+
+  list       The list must be a string with hosts separated by
+             spaces or a file name of a plain text file containing
+             a list of host
+
+Bugs, comments or suggestions:
+https://github.com/falcacibar/misc-utils
+Felipe A. Buccioni <falacibar@gmail.com>
+
+EOU
+   exit 130
+fi
+
+list="${1}"
+
+scssh="$(which scssh)"
+if [ "${scssh}" == "" ]; then
+   scssh="$(dirname $0)/scssh"
+   if [ ! -f "scssh" ]; then
+      echo "Cannot find 'scssh' script in \$PATH or in the same directory of this script" 1>&2
+      exit 1
+    fi
+fi
+
+echo "scssh-shell v0.1 by Felipe A Buccioni <falcacibar@gmail.com>"
+
+while true; do 
+    read -p "scssh> " cmd
+    "${scssh}" "${list}" "${cmd}"
+done
