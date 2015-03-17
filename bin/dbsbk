@@ -133,7 +133,10 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 cmd="sudo -u postgres pg_dumpall"
                 verbose_exec
                 sudo -u postgres pg_dumpall | user_compress
-                success="yes"
+                
+                [ "$?" = "0" ] \
+                    && success="yes" \
+                    || sucess="no"
             ;;
             "mysql")
                 db_type="MySQL"
@@ -159,8 +162,10 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 cmd="mysqldump --opt  --add-drop-table -A ${mysql_vars_opt} --skip-lock-tables -u$mysql_user -p$mysql_password"
                 verbose_exec
                 mysqldump --opt  --add-drop-table -A ${mysql_vars_opt} --skip-lock-tables -u$mysql_user -p$mysql_password | user_compress
-                success="yes"
 
+                [ "$?" = "0" ] \
+                    && success="yes" \
+                    || sucess="no"
             ;; 
             "mongodb")
                 db_type="MongoDB"
@@ -168,16 +173,25 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 cmd="mongodump && ( tar -cvf - dump )"
                 verbose_exec
                 mongodump && ( tar -cvf - dump | user_compress )
+                success="$?"
                 echo -n "Cleaning mongodb dump"
                 rm -rf dump
                 echo "done"
-                success="yes"
+
+                [ "$success" = "0" ] \
+                    && success="yes" \
+                    || sucess="no"
             ;;
             *)
                  echo "Unknown backup type '$type', skipping"
         esac
         
-        [ "${success}" = "yes" ] && echo "Backup of $db_type database completed!\n"
+        if [ "${success}" = "yes" ]; then
+            echo "Backup of $db_type database completed!\n"
+        else
+            echo "Backup for $db_type failed"
+            exit 1
+        fi
     done
 else
     usage
