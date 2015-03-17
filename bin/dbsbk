@@ -131,12 +131,16 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 db_type="PostgreSQL"
                 backup_name="postgres"
                 cmd="sudo -u postgres pg_dumpall"
+                
+                chmod -v 777 "${dir}"
                 verbose_exec
                 sudo -u postgres pg_dumpall | user_compress
                 
                 [ "$?" = "0" ] \
                     && success="yes" \
                     || sucess="no"
+
+                chmod -v 755 "${dir}"
             ;;
             "mysql")
                 db_type="MySQL"
