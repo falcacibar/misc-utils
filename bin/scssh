@@ -27,7 +27,7 @@ Felipe A. Buccioni <falacibar@gmail.com>
 EOU
     exit 130
 else
-    cmd="$(echo ${2} | sed -Ee 's/^[\t ]*//g' -e 's/[\t ]*$//g')"
+    cmd="$(echo ${2} | sed -Ee 's/^[\t ]*//g' -e 's/[\t ]*$//g' -e "s/'/'\"'\"'/g")"
     [ -z "$cmd" ] && exit
 
     trap 'break="yes"; [ "$pids" ] && kill -TERM $pids > /dev/null 2>&'1 INT TERM
