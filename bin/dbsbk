@@ -100,7 +100,7 @@ user_compress() {
 }
 
 verbose_header() {
-   echo -n "${me} - Database Backup utility - Felipe A Buccioni <falcacibar@gmail.com>"
+   echo "${me} - Database Backup utility - Felipe A Buccioni <falcacibar@gmail.com>"
 }
 
 verbose_compress() {
