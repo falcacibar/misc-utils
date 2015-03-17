@@ -96,7 +96,7 @@ enforce_opts() {
 
 date="$(date +"%Y-%m-%d_%H:%M")"
 user_compress() {
-   "$comp_cmd" $comp_ext > "${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}"
+   "$comp_cmd" $comp_args > "${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}"
 }
 
 verbose_header() {
@@ -113,7 +113,7 @@ EOF
 }
 
 verbose_exec() {
-   echo "Executing Command     : $cmd | \"$comp_cmd\" $comp_ext > \"${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}\""
+   echo "Executing Command     : $cmd | \"$comp_cmd\" $comp_args > \"${dir}/${HOSTNAME}-${backup_name}-${date}.${comp_ext}\""
 }
 
 verbose_header
