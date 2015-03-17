@@ -138,10 +138,29 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
             "mysql")
                 db_type="MySQL"
                 backup_name="mysql"
-                cmd="mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password"
+
+                version="$(mysql --version | sed -re 's/^.*Distrib //g' -e 's/([0-9]+)\.([0-9]).*$/\1.\2/g')"
+                if [ -z "$version" ]; then
+                   echo "Cannot get the current version of mysql"
+                   exit 1
+                fi
+
+                verma="$(echo $version | cut -d. -f1)"
+                vermi="$(echo $version | cut -d. -f2)"
+
+                if [ "$verma" -gt "5" ] || ( [ "$verma" -eq "5" ] && [ "$vermi" -gt "0" ] ); then
+                   mysql_vars_opt="-E"
+                fi
+
+                if [ "$verma" -gt "4" ]; then
+                  mysql_vars_opt="${mysql_vars_opt} -R --triggers"
+                fi
+
+                cmd="mysqldump --opt  --add-drop-table -A ${mysql_vars_opt} --skip-lock-tables -u$mysql_user -p$mysql_password"
                 verbose_exec
-                mysqldump --opt  --add-drop-table -ERA --skip-lock-tables --triggers -u$mysql_user -p$mysql_password | user_compress
+                mysqldump --opt  --add-drop-table -A ${mysql_vars_opt} --skip-lock-tables -u$mysql_user -p$mysql_password | user_compress
                 success="yes"
+
             ;; 
             "mongodb")
                 db_type="MongoDB"
