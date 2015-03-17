@@ -28,7 +28,7 @@ fi
 list="${1}"
 
 scssh="$(which scssh)"
-if [ "${scssh}" == "" ]; then
+if [ "${scssh}" = "" ]; then
    scssh="$(dirname $0)/scssh"
    if [ ! -f "scssh" ]; then
       echo "Cannot find 'scssh' script in \$PATH or in the same directory of this script" 1>&2

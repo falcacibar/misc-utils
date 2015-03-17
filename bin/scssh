@@ -41,10 +41,10 @@ else
 
     for host in $list; do 
         if [ "$bg" = "&" ]; then
-            ssh -tt root@$host bash -c "' ( $(echo "$cmd" | sed -Ee 's/\&$//g') ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'" &
+            ssh -tt root@$host bash -ic "' ( $(echo "$cmd" | sed -Ee 's/\&$//g') ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'" &
             pids="${pids} $!"
         else
-            ssh -tt root@$host bash -c "'( $cmd ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'"
+            ssh -tt root@$host bash -ic "'( $cmd ) 2>&1 | sed -e \"s/^/\${HOSTNAME}[$host] : /g\"'"
         fi
 
         [ "${break}" = "yes" ] && break
