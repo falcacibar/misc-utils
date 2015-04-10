@@ -1,0 +1,17 @@
+#!/bin/sh
+
+for f in andad service recover dump; do
+    bin="$(which "am${f}")"
+    [ ! -z "${bin}" ] && [ -x "${bin}" ] && break
+done
+
+[ ! -x "${bin}" ] && echo "Cannot find amanda, aborted" && exit 1
+
+lib="$(ldd "$( which "${bin}" )" | grep "libamanda-" | sed -e 's/^.*=> //g' -e 's/ (.*$//g')"
+user="$(grep -a 'CLIENT_LOGIN' "${lib}"  | sed -re 's/^.*CLIENT_LOGIN="//g' -e 's/".*$//g')"
+
+if [ "$1" = "" ]; then
+    sudo -Hu "${user}" /bin/bash
+else
+    sudo -Hu "${user}" "$@"
+fi
