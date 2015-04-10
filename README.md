@@ -11,3 +11,4 @@ This is a little space to bring the good utilities that save my time.
 | scssh                   | Send sequentially or parallel commands to remote hosts from a list via ssh and output prefixing the name of the host
 | scssh+sh                | A very small and ugly shell for scssh
 | dbsbk                   | Database backup tool supporting different types of databases with compression.
+| amdbsk                  | Amanda backup wrapper for dbsbk

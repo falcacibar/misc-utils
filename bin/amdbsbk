@@ -1,0 +1,36 @@
+#!/bin/sh
+
+readlink_f() { file="$1";while true; do 
+local link="$( readlink $file )"; [ "${link}" = "" ] && break
+file="${link}"; done; echo "${file}"; }
+
+me="$(readlink_f "${0}")"
+usage_header="usage: ${me} [amanda script api options] [options] [db]...
+
+Wrapper to run dbsbk in amanda with script api
+
+Amanda Script API Options:
+    First argument are always:
+
+    execute-on                A uppercase string with the same value 
+                              of amanda.conf file entry
+
+    The rest of arguments should be:
+
+    --execute-where (client|server) 
+                              The place where this script are called
+    --config conf             Name of the backup conf
+    --host host               Host of the backup 
+    --disk disk               Disk of the current backup
+    --device device           Device of the current backup
+"
+
+while [ "$#" -ne 0 ]; do
+   shift
+   i="$(( i+1 ))"
+   [ "$i" -eq "12" ] && break
+done
+
+dir="$(dirname $me)"
+
+. "${dir}/dbsbk"
