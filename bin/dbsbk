@@ -17,6 +17,9 @@ mysql_user="root"
 set_opts() {
   while [ "$#" != "0" ]; do
     case $1 in
+      "-c" | "--clean-dir")
+          clean_dir="yes"
+      ;;
       "-mu" | "--mysql-user")
           shift
           mysql_user="${1}"
@@ -39,9 +42,11 @@ set_opts() {
           shift
           comp_ext="${1}"
       ;;
-      "-d")
+      "-d" | "--directory")
           shift
           dir="${1}"
+      ;;
+      "--type")
       ;;
       *)
           backup="${backup} ${1}"
@@ -70,7 +75,7 @@ Options:
                                (default: ${comp_args})
    -ce ext, --comp-ext         Compressor extension
                                (default: ${comp_ext}
-   -d dir, --directory dir      Directory to save the backup
+   -d dir, --directory dir     Directory to save the backup
                                (default: ${dir})
    
    MySQL specific
@@ -89,8 +94,14 @@ EOF
 
 enforce_opts() {
    if [ ! -d "${dir}" ]; then
+      echo "Creating backup directory ${dir}"
       mkdir -pv "${dir}"; 
       [ "$?" -ne "0" ] && exit 1
+
+      if [ "${clean_dir}" = "yes" ]; then
+        echo "Cleanning backup directory ${dir}"
+        rm -rfv "${dir}/"*
+      fi
    fi
 }
 
@@ -118,9 +129,9 @@ verbose_exec() {
 
 verbose_header
 set_opts "$@"
-enforce_opts
 
 if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; then 
+    enforce_opts
     verbose_compress
     cd "${dir}"
 
@@ -131,11 +142,11 @@ if [ "" != "$(echo "${backup}" | sed -e 's/^[ \t]*//g' -e 's/[ \t]*$//g')" ]; th
                 db_type="PostgreSQL"
                 backup_name="postgres"
                 cmd="sudo -u postgres pg_dumpall"
-                
+
                 chmod -v 777 "${dir}"
                 verbose_exec
                 sudo -u postgres pg_dumpall | user_compress
-                
+
                 [ "$?" = "0" ] \
                     && success="yes" \
                     || sucess="no"
