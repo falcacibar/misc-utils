@@ -57,12 +57,16 @@ set_opts() {
 }
 
 usage() {
-   cat <<EOF
-usage: ${me} [options] [db]...
+    if [ -z "${usage_header}" ]; then
+    usage_header="usage: ${me} [options] [db]...
 
 Database backup tool supporting different types of databases with 
-compression.
+compression."
+    fi
 
+    cat <<EOF
+${usage_header}
+y
 Databases:
     mongodb                    MongoDB (tarballed mongodump)
     mysql                      MySQL (mysqldump)
