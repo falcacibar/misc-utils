@@ -28,7 +28,7 @@ Amanda Script API Options:
 while [ "$#" -ne 0 ]; do
    shift
    i="$(( i+1 ))"
-   [ "$i" -eq "12" ] && break
+   [ "$i" -eq "13" ] && break
 done
 
 dir="$(dirname $me)"
