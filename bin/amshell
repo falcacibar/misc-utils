@@ -11,7 +11,7 @@ lib="$(ldd "$( which "${bin}" )" | grep "libamanda-" | sed -e 's/^.*=> //g' -e '
 user="$(grep -a 'CLIENT_LOGIN' "${lib}"  | sed -re 's/.*CLIENT_LOGIN="//g' -e 's/".*$//g')"
 
 if [ "$1" = "" ]; then
-    sudo -Hu "${user}" /bin/bash
+    sudo -H -u "${user}" /bin/bash
 else
-    sudo -Hu "${user}" "$@"
+    sudo -H -u "${user}" "$@"
 fi
