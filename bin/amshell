@@ -1,7 +1,7 @@
 #!/bin/sh
 
 for f in andad service recover dump; do
-    bin="$(which "am${f}")"
+    bin="$(which "am${f}" 2> /dev/null)"
     [ ! -z "${bin}" ] && [ -x "${bin}" ] && break
 done
 
